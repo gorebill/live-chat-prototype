@@ -27,14 +27,14 @@
             summaryOutput.textContent = 'Summarizing...';
 
             try {
-                summaryOutput.textContent = summarizeByOpenai(inputText);
+                summaryOutput.textContent = await summarizeByOpenai(inputText);
             } catch (error) {
                 summaryOutput.textContent = `Error: ${error.message}`;
             }
         });
 
 
-        function summarizeByOpenai(inputText) {
+        async function summarizeByOpenai(inputText) {
             try {                
                 if (!inputText.trim()) {
                     throw new Error('Please enter some text to summarize.');
