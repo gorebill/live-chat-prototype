@@ -14,7 +14,7 @@
 
     <script type="typescript">
         // OpenAI API Key
-        const API_KEY = "your_openai_api_key";
+        const API_KEY = getQuery('token'); //"your_openai_api_key";
 
         // HTML Elements
         const startButton = document.getElementById("startButton") as HTMLButtonElement;
@@ -94,6 +94,20 @@
                 responseOutput.textContent += "Streaming stopped.\n";
             }
         };
+
+
+        function getQuery(key: string) {
+            if (window.URLSearchParams) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const ret = urlParams.get(key);
+                return ret
+            } else {
+                let match = RegExp('[?&]' + key + '=([^&]*)').exec(window.location.search);
+                return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+            }
+        }
+
+        
 
         // Add event listeners
         startButton.addEventListener("click", startStreaming);
