@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Audio Streaming</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/typescript/4.9.5/typescript.min.js"></script>
+    <title>Live Audio Stream to OpenAI</title>
 </head>
 <body>
     <h1>Live Audio Stream to OpenAI</h1>
@@ -12,21 +11,21 @@
     <button id="stopButton" disabled>Stop Streaming</button>
     <pre id="responseOutput"></pre>
 
-    <script type="typescript">
+    <script>
         // OpenAI API Key
-        const API_KEY = getQuery('token'); //"your_openai_api_key";
+        const API_KEY = getQuery("token"); //"your_openai_api_key";
 
         // HTML Elements
-        const startButton = document.getElementById("startButton") as HTMLButtonElement;
-        const stopButton = document.getElementById("stopButton") as HTMLButtonElement;
-        const responseOutput = document.getElementById("responseOutput") as HTMLPreElement;
+        const startButton = document.getElementById("startButton");
+        const stopButton = document.getElementById("stopButton");
+        const responseOutput = document.getElementById("responseOutput");
 
         // Audio context and streaming variables
-        let mediaRecorder: MediaRecorder | null = null;
+        let mediaRecorder = null;
         let isStreaming = false;
 
         // Function to process and send audio chunks to OpenAI
-        const sendAudioChunk = async (audioBlob: Blob) => {
+        async function sendAudioChunk(audioBlob) {
             const formData = new FormData();
             formData.append("file", audioBlob);
             formData.append("model", "whisper-1");
@@ -45,15 +44,15 @@
                 }
 
                 const result = await response.json();
-                responseOutput.textContent += `${JSON.stringify(result.text)}\n`;
+                responseOutput.textContent += `${result.text}\n`;
             } catch (error) {
                 console.error("Error sending audio chunk:", error);
                 responseOutput.textContent += `Error: ${error.message}\n`;
             }
-        };
+        }
 
         // Start streaming audio
-        const startStreaming = async () => {
+        async function startStreaming() {
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 alert("Your browser does not support audio streaming.");
                 return;
@@ -82,10 +81,10 @@
             } catch (error) {
                 console.error("Error starting audio stream:", error);
             }
-        };
+        }
 
         // Stop streaming audio
-        const stopStreaming = () => {
+        function stopStreaming() {
             if (mediaRecorder) {
                 mediaRecorder.stop();
                 isStreaming = false;
@@ -93,10 +92,10 @@
                 stopButton.disabled = true;
                 responseOutput.textContent += "Streaming stopped.\n";
             }
-        };
+        }
 
-
-        function getQuery(key: string) {
+        
+        function getQuery(key) {
             if (window.URLSearchParams) {
                 const urlParams = new URLSearchParams(window.location.search);
                 const ret = urlParams.get(key);
@@ -106,8 +105,6 @@
                 return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
             }
         }
-
-        
 
         // Add event listeners
         startButton.addEventListener("click", startStreaming);
