@@ -27,7 +27,7 @@
         // Function to process and send audio chunks to OpenAI
         async function sendAudioChunk(audioBlob) {
             // Convert the audio Blob to WAV format
-            const wavBlob = await convertToWav(audioBlob
+            const wavBlob = await convertToWav(audioBlob);
                                               
             const formData = new FormData();
             formData.append("file", audioBlob, "audio.wav");
