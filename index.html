@@ -26,8 +26,11 @@
 
         // Function to process and send audio chunks to OpenAI
         async function sendAudioChunk(audioBlob) {
+            // Convert the audio Blob to WAV format
+            const wavBlob = await convertToWav(audioBlob
+                                              
             const formData = new FormData();
-            formData.append("file", audioBlob);
+            formData.append("file", audioBlob, "audio.wav");
             formData.append("model", "whisper-1");
 
             try {
@@ -73,7 +76,7 @@
                     isStreaming = false;
                 };
 
-                mediaRecorder.start(1_000); // Send chunks every 1 seconds
+                mediaRecorder.start(3_000); // Send chunks every 3 seconds
 
                 startButton.disabled = true;
                 stopButton.disabled = false;
@@ -92,6 +95,54 @@
                 stopButton.disabled = true;
                 responseOutput.textContent += "Streaming stopped.\n";
             }
+        }
+
+
+        async function convertToWav(blob) {
+            const audioContext = new AudioContext();
+            const arrayBuffer = await blob.arrayBuffer();
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        
+            const wavBuffer = audioBufferToWav(audioBuffer);
+            return new Blob([wavBuffer], { type: "audio/wav" });
+        }
+        
+        function audioBufferToWav(buffer) {
+            const numOfChan = buffer.numberOfChannels;
+            const length = buffer.length * numOfChan * 2 + 44;
+            const bufferArray = new ArrayBuffer(length);
+            const view = new DataView(bufferArray);
+        
+            writeWavHeader(view, buffer, numOfChan);
+        
+            let offset = 44;
+            for (let i = 0; i < buffer.numberOfChannels; i++) {
+                const channelData = buffer.getChannelData(i);
+                for (let j = 0; j < channelData.length; j++) {
+                    view.setInt16(offset, channelData[j] * 0x7fff, true);
+                    offset += 2;
+                }
+            }
+        
+            return bufferArray;
+        }
+        
+        function writeWavHeader(view, buffer, numOfChan) {
+            const sampleRate = buffer.sampleRate;
+        
+            view.setUint32(0, 0x46464952, false); // "RIFF"
+            view.setUint32(4, 36 + buffer.length * numOfChan * 2, true);
+            view.setUint32(8, 0x45564157, false); // "WAVE"
+            view.setUint32(12, 0x20746d66, false); // "fmt "
+            view.setUint32(16, 16, true); // PCM
+            view.setUint16(20, 1, true); // PCM format
+            view.setUint16(22, numOfChan, true); // Number of channels
+            view.setUint32(24, sampleRate, true); // Sample rate
+            view.setUint32(28, sampleRate * numOfChan * 2, true); // Byte rate
+            view.setUint16(32, numOfChan * 2, true); // Block align
+            view.setUint16(34, 16, true); // Bits per sample
+            view.setUint32(36, 0x61746164, false); // "data"
+            view.setUint32(40, buffer.length * numOfChan * 2, true); // Data chunk length
         }
 
         
