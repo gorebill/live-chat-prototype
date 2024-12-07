@@ -27,6 +27,19 @@
             summaryOutput.textContent = 'Summarizing...';
 
             try {
+                summaryOutput.textContent = summarizeByOpenai(inputText);
+            } catch (error) {
+                summaryOutput.textContent = `Error: ${error.message}`;
+            }
+        });
+
+
+        function summarizeByOpenai(inputText) {
+            try {                
+                if (!inputText.trim()) {
+                    throw new Error('Please enter some text to summarize.');
+                }
+                
                 const response = await fetch('https://api.openai.com/v1/chat/completions', {
                     method: 'POST',
                     headers: {
@@ -39,8 +52,8 @@
                             { role: 'system', content: 'You are a helpful assistant that summarizes text.' },
                             { role: 'user', content: `Please summarize the following text:\n\n${inputText}` },
                         ],
-                        max_tokens: 150, // Adjust the token limit for the summary
-                        temperature: 0.7, // Optional: Adjust for more/less creative responses
+                        max_completion_tokens: 60, // Adjust the token limit for the summary
+                        temperature: 0.3, // Optional: Adjust for more/less creative responses
                     }),
                 });
 
@@ -50,11 +63,15 @@
 
                 const data = await response.json();
                 const summary = data.choices[0].message.content.trim();
-                summaryOutput.textContent = summary;
+
+                return summary;
+                
             } catch (error) {
-                summaryOutput.textContent = `Error: ${error.message}`;
+                //console.error(error);
+                throw error;
             }
-        });
+        }
+        
         
         function getQuery(key) {
             if (window.URLSearchParams) {
