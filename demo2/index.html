@@ -53,7 +53,7 @@
                             { role: 'system', content: 'You are a helpful assistant that summarizes text.' },
                             { role: 'user', content: `Please summarize the following text:\n\n${inputText}` },
                         ],
-                        max_completion_tokens: 60, // Adjust the token limit for the summary
+                        max_completion_tokens: 150, // Adjust the token limit for the summary
                         temperature: 0.3, // Optional: Adjust for more/less creative responses
                     }),
                 });
