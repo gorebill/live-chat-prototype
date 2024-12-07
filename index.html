@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Audio Streaming</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/typescript/4.9.5/typescript.min.js"></script>
+</head>
+<body>
+    <h1>Live Audio Stream to OpenAI</h1>
+    <button id="startButton">Start Streaming</button>
+    <button id="stopButton" disabled>Stop Streaming</button>
+    <pre id="responseOutput"></pre>
+
+    <script type="typescript">
+        // OpenAI API Key
+        const API_KEY = "your_openai_api_key";
+
+        // HTML Elements
+        const startButton = document.getElementById("startButton") as HTMLButtonElement;
+        const stopButton = document.getElementById("stopButton") as HTMLButtonElement;
+        const responseOutput = document.getElementById("responseOutput") as HTMLPreElement;
+
+        // Audio context and streaming variables
+        let mediaRecorder: MediaRecorder | null = null;
+        let isStreaming = false;
+
+        // Function to process and send audio chunks to OpenAI
+        const sendAudioChunk = async (audioBlob: Blob) => {
+            const formData = new FormData();
+            formData.append("file", audioBlob);
+            formData.append("model", "whisper-1");
+
+            try {
+                const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${API_KEY}`
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                responseOutput.textContent += `${JSON.stringify(result.text)}\n`;
+            } catch (error) {
+                console.error("Error sending audio chunk:", error);
+                responseOutput.textContent += `Error: ${error.message}\n`;
+            }
+        };
+
+        // Start streaming audio
+        const startStreaming = async () => {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert("Your browser does not support audio streaming.");
+                return;
+            }
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                isStreaming = true;
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0 && isStreaming) {
+                        sendAudioChunk(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    isStreaming = false;
+                };
+
+                mediaRecorder.start(3000); // Send chunks every 3 seconds
+
+                startButton.disabled = true;
+                stopButton.disabled = false;
+                responseOutput.textContent = "Streaming started...\n";
+            } catch (error) {
+                console.error("Error starting audio stream:", error);
+            }
+        };
+
+        // Stop streaming audio
+        const stopStreaming = () => {
+            if (mediaRecorder) {
+                mediaRecorder.stop();
+                isStreaming = false;
+                startButton.disabled = false;
+                stopButton.disabled = true;
+                responseOutput.textContent += "Streaming stopped.\n";
+            }
+        };
+
+        // Add event listeners
+        startButton.addEventListener("click", startStreaming);
+        stopButton.addEventListener("click", stopStreaming);
+    </script>
+</body>
+</html>
