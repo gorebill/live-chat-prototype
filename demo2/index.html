@@ -14,8 +14,9 @@
     <div id="summaryOutput" style="white-space: pre-wrap;"></div>
 
     <script>
+        const apiKey = getQuery('token');//'your-openai-api-key'; // Replace with your API key
+        
         document.getElementById('summarizeButton').addEventListener('click', async () => {
-            const apiKey = getQuery('token');//'your-openai-api-key'; // Replace with your API key
             const inputText = document.getElementById('inputText').value;
             const summaryOutput = document.getElementById('summaryOutput');
 
